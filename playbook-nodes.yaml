@@ -7,15 +7,25 @@ tasks:
 - name: update packages on the kube-nodes group
   apt:
     update_cache: yes
+    upgrade: dist
 - name: install dependencies packages
 - apt: name=apt-transport-https state=present
-- apt: name=gnupg2 state=present  
-- shell:
-    cmd: curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
-         apt-key add -
-         echo “deb https://apt.kubernetes.io/ kubernetes-xenial main” | \
-         tee -a /etc/apt/sources.list.d/kubernetes.list
+- apt: name=gnupg state=present  
+- apt: name=curl state=present
+- apt: name=lsb-release state=present
+- name: set the hostname of the node
+  shell:
+    cmd: hostnamectl set-hostname k-node1
+  register: result_nodename
+- debug:
+    var: result_nodename
+- name: install kubernetes repositories
+  shell:
+    cmd: curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
     warn: false
+- copy:
+    content: deb https://apt.kubernetes.io/ kubernetes-xenial main
+    dest: /etc/apt/sources.list.d/kubernetes.list
 - name: update the cached packages
 - apt:
     update_cache: yes
@@ -23,29 +33,62 @@ tasks:
 - apt: name=kubectl state=present
 - apt: name=kubelet state=started
 - apt: name=kubeadm state=present
-- apt: name=kubernetes-cni state=present
+- name: install containerd runtime for containers in the cluster 
+  shell:
+    cmd: wget https://github.com/containerd/containerd/releases/download/v1.6.24/containerd-1.6.24-linux-amd64.tar.gz
+    warn: false
+- shell: 
+    cmd: tar Czxvf /usr/local containerd-1.6.24-linux-amd64.tar.gz
+- shell:
+    cmd: wget https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
+    warn: false
+- shell:
+    cmd: mv containerd.service /usr/lib/systemd/system/
+- shell:
+    cmd: systemctl daemon-reload
+- shell:
+    cmd: systemctl enable --now containerd
+- file:
+    path: /etc/containerd/
+    state: directory
+- shell:
+    cmd: container config default |  tee /etc/containerd/config.toml
+- lineinfile:
+    path: /etc/containerd/config.toml
+    regexp: '^SystemdCgroup \='
+    line: SystemdGroup = true
+    state: present
+    backrefs: yes
+    register: mychanges
+- debug:
+    var: mychanges
+- apt:
+   update_cache: yes
+- name: install docker   
 - apt: name=docker.io state=present
-- name: start docker service
-- shell:
-    cmd: systemctl enable docker && systemctl start docker
-- shell:
-    cmd: usermod -aG docker $USER && newgrp docker
-- shell:
-    cmd: cat << EOF | tee /etc/sysctl.d/k8s.conf
-         net.bridge.bridge-nf-call-ip6tables = 1
-         net.bridge.bridge-nf-call-iptables = 1
-         EOF
-        sysctl --system
-- name: setting up the cgroup driver configuration on the nodes
-  lineinfile:
-    path: /etc/docker/daemon.json
-    line: "{“exec-opts”: [“native.cgroupdriver=systemd”]}" 
-    create: yes
-- name: reload docker daemon-reload
-  shell:
-    cmd: systemctl daemon-reload && systemctl restart docker && systemctl restart kubelet
-- name: let's join our nodes to the cluster
-  shell:
-    cmd: kubeadm join {{ MASTER_PRIVATE_IP }}:{{ API_SERVER_PORT }} \
-         --token {{ JOIN_TOKEN_VALUE }} \
-         --discovery-token-ca-cert-hash {{ HASH_VALUE }}         
+- name: add user ubuntu to the group docker 
+- user:
+    name: ubuntu
+    comment: user ubuntu
+    uid: 1000
+    groups: docker 
+    append: yes 
+    register: user_ubuntu
+- debug:
+    var: user_ubuntu['append'], user_ubuntu['groups']
+- copy:
+    src: ./file.txt
+    dest: /etc/sysctl.d/k8s.conf
+- command:
+    argv:
+      - sysctl --system
+- reboot:
+- command:
+    argv:
+      - kubeadm join 172.31.37.70:6443
+      - --token j9irz3.4z5twnjwiblg0n24
+      - --discovery-token-ca-cert-hash sha256:e0b9ef9d20344b5860140cf01086710f7771a19e79bded0b448b966a1adc253a
+  args:
+    chdir: /home/ubuntu/
+  register: myoutput
+        

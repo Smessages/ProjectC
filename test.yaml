@@ -56,12 +56,6 @@
       cmd: sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
   - apt:
       update_cache: yes
-  #- shell: 
-   #   cmd: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-    #  warn: false
-  #- copy:
-   #   content: deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable
-    #  dest: /etc/apt/sources.list.d/docker.list
   - apt:
       update_cache: yes
   - apt: 
@@ -80,10 +74,15 @@
   - shell: 
       cmd: sysctl --system  
            
-  - shell:  
-      cmd: kubeadm init --apiserver-advertise-address="172.31.37.70" --pod-network-cidr="172.31.32.0/20" --ignore-preflight-errors=Mem,NumCPU
+  - command:
+      argv: 
+        - kubeadm init
+        - --apiserver-advertise-address="172.31.37.70" 
+        - --pod-network-cidr="172.31.32.0/20" 
+        - --ignore-preflight-errors=Mem,NumCPU
+    args:
+      chdir: /home/ubuntu/
     register: result
-  
   - debug:
       var: result
   - file:
@@ -93,9 +92,12 @@
       src: /etc/kubernetes/admin.conf
       dest: /home/ubuntu/.kube/config
       remote_src: yes
-  - shell:
-      cmd: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
-      warn: false 
+  - command:
+      argv: 
+        - kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+    args:
+      chdir: /home/ubuntu/
+      become_user: ubuntu
          
 
     
