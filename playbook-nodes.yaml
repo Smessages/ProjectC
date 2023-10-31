@@ -1,0 +1,51 @@
+---
+hosts: kube-nodes
+ansible_user: ubuntu
+become: yes
+
+tasks:
+- name: update packages on the kube-nodes group
+  apt:
+    update_cache: yes
+- name: install dependencies packages
+- apt: name=apt-transport-https state=present
+- apt: name=gnupg2 state=present  
+- shell:
+    cmd: curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
+         apt-key add -
+         echo “deb https://apt.kubernetes.io/ kubernetes-xenial main” | \
+         tee -a /etc/apt/sources.list.d/kubernetes.list
+    warn: false
+- name: update the cached packages
+- apt:
+    update_cache: yes
+- name: install kubernetes main packages
+- apt: name=kubectl state=present
+- apt: name=kubelet state=started
+- apt: name=kubeadm state=present
+- apt: name=kubernetes-cni state=present
+- apt: name=docker.io state=present
+- name: start docker service
+- shell:
+    cmd: systemctl enable docker && systemctl start docker
+- shell:
+    cmd: usermod -aG docker $USER && newgrp docker
+- shell:
+    cmd: cat << EOF | tee /etc/sysctl.d/k8s.conf
+         net.bridge.bridge-nf-call-ip6tables = 1
+         net.bridge.bridge-nf-call-iptables = 1
+         EOF
+        sysctl --system
+- name: setting up the cgroup driver configuration on the nodes
+  lineinfile:
+    path: /etc/docker/daemon.json
+    line: "{“exec-opts”: [“native.cgroupdriver=systemd”]}" 
+    create: yes
+- name: reload docker daemon-reload
+  shell:
+    cmd: systemctl daemon-reload && systemctl restart docker && systemctl restart kubelet
+- name: let's join our nodes to the cluster
+  shell:
+    cmd: kubeadm join {{ MASTER_PRIVATE_IP }}:{{ API_SERVER_PORT }} \
+         --token {{ JOIN_TOKEN_VALUE }} \
+         --discovery-token-ca-cert-hash {{ HASH_VALUE }}         

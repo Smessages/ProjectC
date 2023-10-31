@@ -1,0 +1,101 @@
+---
+- hosts: masters
+  become: yes
+
+  tasks:
+  - name: update cache
+    apt:
+      update_cache: yes 
+      upgrade: dist  
+  - apt: name=apt-transport-https state=present
+  - apt: name=gnupg state=present 
+  - apt: name=curl state=present
+  - apt: name=lsb-release state=present
+  - name: get the hostnames of the machines
+    shell: 
+      cmd: hostnamectl set-hostname master1 
+    register: node
+  - debug: 
+      var: node
+  
+  - apt:
+      update_cache: yes
+  - name: install helpers packages
+    shell:
+      cmd: curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+      warn: false
+  - copy:
+      content: deb https://apt.kubernetes.io/ kubernetes-xenial main
+      dest: /etc/apt/sources.list.d/kubernetes.list
+  - name: update packages
+    apt:
+      update_cache: yes
+  - apt: name=kubectl state=present
+  - apt: name=kubeadm state=present
+  - apt: name=kubelet state=present
+  - shell:
+      cmd: wget https://github.com/containerd/containerd/releases/download/v1.6.24/containerd-1.6.24-linux-amd64.tar.gz
+      warn: false
+  - shell:
+      cmd: tar Czxvf /usr/local containerd-1.6.24-linux-amd64.tar.gz
+  - shell:
+      cmd: wget https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
+      warn: false
+  - shell: 
+      cmd: mv containerd.service /usr/lib/systemd/system/
+  - shell:
+      cmd: systemctl daemon-reload
+  - shell:
+      cmd: systemctl enable --now containerd
+  - file:
+      path: /etc/containerd/
+      state: directory
+  - shell:
+      cmd: containerd config default | tee /etc/containerd/config.toml
+  - shell:
+      cmd: sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
+  - apt:
+      update_cache: yes
+  #- shell: 
+   #   cmd: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    #  warn: false
+  #- copy:
+   #   content: deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable
+    #  dest: /etc/apt/sources.list.d/docker.list
+  - apt:
+      update_cache: yes
+  - apt: 
+      name: docker.io 
+      state: present    
+    
+  - name: add user to the group docker
+    shell:
+      cmd: usermod -aG docker $USER
+  - reboot:
+
+  - name: setting the cgroup driver for kubernetes in docker configuration
+    copy:
+      src: ./file.txt
+      dest: /etc/sysctl.d/k8s.conf
+  - shell: 
+      cmd: sysctl --system  
+           
+  - shell:  
+      cmd: kubeadm init --apiserver-advertise-address="172.31.37.70" --pod-network-cidr="172.31.32.0/20" --ignore-preflight-errors=Mem,NumCPU
+    register: result
+  
+  - debug:
+      var: result
+  - file:
+      path: /home/ubuntu/.kube/
+      state: directory 
+  - copy:
+      src: /etc/kubernetes/admin.conf
+      dest: /home/ubuntu/.kube/config
+      remote_src: yes
+  - shell:
+      cmd: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+      warn: false 
+         
+
+    
