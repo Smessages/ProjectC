@@ -16,7 +16,7 @@
       cmd: hostnamectl set-hostname master1 
     register: node
   - debug: 
-      var: node
+      var: node['cmd'][2]
   
   - apt:
       update_cache: yes
@@ -38,6 +38,7 @@
       warn: false
   - shell:
       cmd: tar Czxvf /usr/local containerd-1.6.24-linux-amd64.tar.gz
+      warn: false
   - shell:
       cmd: wget https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
       warn: false
@@ -54,6 +55,7 @@
       cmd: containerd config default | tee /etc/containerd/config.toml
   - shell:
       cmd: sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
+      warn: false
   - apt:
       update_cache: yes
   - apt:
@@ -63,8 +65,7 @@
       state: present    
     
   - name: add user to the group docker
-    shell:
-      cmd: usermod -aG docker $USER
+    command: usermod -aG docker $USER
   - reboot:
 
   - name: setting the cgroup driver for kubernetes in docker configuration
@@ -74,12 +75,7 @@
   - shell: 
       cmd: sysctl --system  
            
-  - command:
-      argv: 
-        - kubeadm init
-        - --apiserver-advertise-address="172.31.37.70" 
-        - --pod-network-cidr="172.31.32.0/20" 
-        - --ignore-preflight-errors=Mem,NumCPU
+  - command: kubeadm init --apiserver-advertise-address="192.168.1.183" --pod-network-cidr="10.244.0.0/16" --ignore-preflight-errors=Mem,NumCPU
     args:
       chdir: /home/ubuntu/
     register: result
@@ -92,12 +88,11 @@
       src: /etc/kubernetes/admin.conf
       dest: /home/ubuntu/.kube/config
       remote_src: yes
-  - command:
-      argv: 
-        - kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+  - command: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
     args:
       chdir: /home/ubuntu/
-      become_user: ubuntu
+    become_user: ubuntu
+      
          
 
     
