@@ -3,7 +3,7 @@ FROM python
 RUN mkdir /service
 COPY protobufs/ /service/protobufs/
 COPY recommendations/ /service/recommendations/
-COPY certs/ /service/certs/
+COPY certs/ca.pem /service/recommendations/
 WORKDIR /service/recommendations
 RUN python -m pip install --upgrade pip
 RUN python -m pip install -r requirements.txt
