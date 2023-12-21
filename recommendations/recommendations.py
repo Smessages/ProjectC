@@ -57,11 +57,11 @@ def serve():
         RecommendationService(), server
     )
 
-    with open("certs/server.key", "rb") as fp:
+    with open("server.key", "rb") as fp:
 
         server_key = fp.read()
 
-    with open("certs/server.pem", "rb") as fp:
+    with open("server.pem", "rb") as fp:
 
         server_cert = fp.read()
 

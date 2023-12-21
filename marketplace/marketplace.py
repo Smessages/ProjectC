@@ -10,7 +10,7 @@ from recommendations_pb2_grpc import RecommendationsStub
 app = Flask(__name__)
 
 recommendations_host = os.getenv("RECOMMENDATIONS_HOST", "localhost")
-with open("certs/ca.pem", "rb") as fp:
+with open("ca.pem", "rb") as fp:
 
     ca_cert = fp.read()
 
