@@ -10,7 +10,7 @@ services:
         networks:
             - microservices
         ports:
-            - 6000:5000
+            - 7001:5000
 
     recommendations:
         # DOCKER_BUILDKIT=1 docker build . -f recommendations/Dockerfile \
