@@ -73,3 +73,29 @@ in this project we wrote an ansible playbook that will configure all the cluster
 
 on successfull installation , you should have smething like this..
 ![Alt text](/screenshots/ansible-config.png?raw=true "ansible config nodes")
+
+-step 3 jenkins deployment
+
+we will deploy jenkins pod  in the cluster and we will set it to run our builds and test for our aplications.
+to access jenkins web interface for the configurations we will create an ingress to make it available out of the cluster so that we can access it throught our web browser.
+
+The jenkins deployment is accessible  in the jenkins directory 
+inside the directory we have a deployment.yaml file whcich basicaly create the jenkins deployment in a specific NS(namespace), we specify the service seviceAccount in the spec very important this will help us bind a role to the user jenkins with the secessary permissions for all the jobs we will be doing.
+
+we also expose the deployment in the service definition  in the same namespace.
+
+notice the claim we created at the begining of the file that we mentioned in the volumes section of the deployment which storageClassName is aroon-nfs the one we set earlier. 
+we also heve a file named service-account.yaml that creates also a bunch of resources , it creates:
+- serviceAccount named jenkins-admin in the namespace ops
+- role named jenkins in the same namespace
+- roleBinding that bind the role jenkins to the serviceAccount previously mentioned in the jenkins deployment . we also include the namespace in the subject of the rolebinding 
+![Alt text](/screenshots/roleBinding?raw=true "role binding")
+
+The commands to issue in this directory are:
+
+- 1- kubectl create -f service-account.yaml
+- 2- kubectl create -f deployment.yaml
+
+after we should see this :
+![Alt text](/screenshots/jenkins-deployment.png?raw=true "jenkins deployment")
+
