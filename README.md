@@ -35,6 +35,8 @@ capture creation of the cluster
 ```
 ## Cluster Setup
 
+- step 1
+
 Once our cluster is up and running we can start adding some few packages and configurations to it . So lets do that!!!
 we will be traefik as our cluster ingress controller, an NFS as our default StorageClass in the cluster , we will also need ansible on our development machine to help in configuring the cluster nodes for the purpose of this project.
 
@@ -62,6 +64,12 @@ Once the NFS deployment is up and running some few configurations are yet to be 
 ![Alt text](/screenshots/edit-scLass.png?raw=true "change the default sc")
 
 
+- step 2 nodes configurations
 
+Now that we have traefik install and running we need to make sure that all the nodes in the cluster have docker installed
+becuase jenkins user will be running some containers inside the pods on the cluster using the underlying docker socket on each node the pod will be runnig on.
 
+in this project we wrote an ansible playbook that will configure all the cluster nodes with docker and will expose the docker api , also the playbook will create a user jenkins with a home directory, create an ssh key pair for this user make him part of the docker group so that he can run docker commands , the playbook also install some few dependencies.
 
+on successfull installation , you should have smething like this..
+![Alt text](screenshots/ansible-install-docker-onK8s2023-12-16 185955.png?raw=true "ansible config nodes")
