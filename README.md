@@ -58,7 +58,7 @@ As you can see these few lines command do a lot in our cluster.
 we are using a deployment  that you can find in the NFS-StorageClass directory , it will help us manage our volumes  and claims  while deploying our applications.
 
 Once the NFS deployment is up and running some few configurations are yet to be done because when we create our cluster it comes with a default storageClass (gp2) , so we have to change that setting by editing the SC as shown in the screenshoot
-![Alt text](/screenshots/set-aroon-nfs-default.PNG?raw=true "edit to default storageClass")
+![Alt text](/screenshots/set-aroon-nfs-default.png?raw=true "edit to default storageClass")
 ![Alt text](/screenshots/edit-scLass.png?raw=true "change the default sc")
 
 
