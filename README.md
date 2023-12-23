@@ -72,4 +72,4 @@ becuase jenkins user will be running some containers inside the pods on the clus
 in this project we wrote an ansible playbook that will configure all the cluster nodes with docker and will expose the docker api , also the playbook will create a user jenkins with a home directory, create an ssh key pair for this user make him part of the docker group so that he can run docker commands , the playbook also install some few dependencies.
 
 on successfull installation , you should have smething like this..
-![Alt text](screenshots/ansible-install-docker-onK8s2023-12-16 185955.png?raw=true "ansible config nodes")
+![Alt text](/screenshots/ansible-install-docker-onK8s2023-12-16 185955.png?raw=true "ansible config nodes")
