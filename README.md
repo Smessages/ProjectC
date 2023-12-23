@@ -89,7 +89,7 @@ we also heve a file named service-account.yaml that creates also a bunch of reso
 - serviceAccount named jenkins-admin in the namespace ops
 - role named jenkins in the same namespace
 - roleBinding that bind the role jenkins to the serviceAccount previously mentioned in the jenkins deployment . we also include the namespace in the subject of the rolebinding 
-![Alt text](/screenshots/roleBinding?raw=true "role binding")
+![Alt text](screenshots/roleBinding.png?raw=true "role binding")
 
 The commands to issue in this directory are:
 
