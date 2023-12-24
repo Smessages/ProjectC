@@ -156,4 +156,18 @@ The setup is pretty straight forward  .
 
 - 4: create the pipeline
 
+- 5: run the pipeline
+
 I will just screenshot each steps for the sake of brievity and i will explain the details of each steps during the presentation if needed
+
+the pipeline screenshot already shows that our images were built correctly, and we actualy have our images on the docker repository we can mentioned those images in a kuberntes deployment as we did for other deployment and that's how we will deploy our application on cloud.
+
+we will expose our deployment as service in the cluster and same as the we expose the jenkins deployment we will also create an ingress to make our application available out of the cluster with the help of traefik ingress controller.
+
+
+The steps are pretty simple
+
+- we create the deployment with the images we just built
+- we expose the deployment
+- we create an ingress 
+- we access our application in the web browser
