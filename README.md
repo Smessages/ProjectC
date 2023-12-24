@@ -31,7 +31,7 @@ these three commands wil create our cluster in few minutes .
 on succesfull completion you should see something like this:
 ```
 capture creation of the cluster
-
+![Alt text](/screenshots/cluster-created.png?raw=true "cluster created")
 ```
 ## Cluster Setup
 
@@ -88,7 +88,8 @@ notice the claim we created at the begining of the file that we mentioned in the
 we also heve a file named service-account.yaml that creates also a bunch of resources , it creates:
 - serviceAccount named jenkins-admin in the namespace ops
 - role named jenkins in the same namespace
-- roleBinding that bind the role jenkins to the serviceAccount previously mentioned in the jenkins deployment . we also include the namespace in the subject of the rolebinding 
+- roleBinding that bind the role jenkins to the serviceAccount previously mentioned in the jenkins deployment . we also include the namespace in the subject of the rolebinding
+
 ![Alt text](screenshots/roleBinding.png?raw=true "role binding")
 
 The commands to issue in this directory are:
@@ -97,5 +98,34 @@ The commands to issue in this directory are:
 - 2- kubectl create -f deployment.yaml
 
 after we should see this :
+
 ![Alt text](/screenshots/jenkins-deployment.png?raw=true "jenkins deployment")
 
+Now that our jenkins pod is up and running we can access it in our web browser , but before we can do that, i would like to show you the nodes configurations with docker and the ingress we need to create to be able to access jenkins in the web browser. 
+
+- Nodes configuration 
+lets ssh into one of our cluster node and check the docker service status.
+
+![Alt text](/screenshots/status-docker-onworker-nodes.png?raw=true "docker on worker nodes")
+
+here the configuration is showing clear how jenkins wil be able to access the docker daemon using the host socket 
+we will also take the ssh private_key and pub_key we created during the ansible configuration . These will hepl the user jenkins to to connect to the hostduring the jobs he will be doing.
+These key pair will also be set in our github repo for the same purpose.
+
+- creation of the ingress jenkins
+
+Since we are working with traefik as our default ingress controller , we need to tell traefik to send all the incoming request related to jenkins to the right service and port .
+here is the description of the jenkins service we created earlier.
+
+![Alt text](/screenshots/description-jenkins-service.png?raw=true "jenkins service description")
+
+the command to create an ingress for this service will be 
+```kubectl create ing jenkins --rule=jenkins-service.digbot.fun/*=jenkins-service:8080
+|```
+the picture below shows that the ingress is created and we can see the enpoint
+
+![Alt text](/screenshots/describe-ingress.png?raw=true "ingress description")
+
+this allow us to access the jenkins server web interface.
+
+With all this set up we can configure our jenkins pipeline.
