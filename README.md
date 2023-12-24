@@ -106,7 +106,7 @@ Now that our jenkins pod is up and running we can access it in our web browser ,
 - Nodes configuration 
 lets ssh into one of our cluster node and check the docker service status.
 
-![Alt text](/screenshots/status-docker-onworker-nodes.png?raw=true "docker on worker nodes")
+![Alt text](/screenshots/status-docker-on-worker-nodes.png?raw=true "docker on worker nodes")
 
 here the configuration is showing clear how jenkins wil be able to access the docker daemon using the host socket 
 we will also take the ssh private_key and pub_key we created during the ansible configuration . These will hepl the user jenkins to to connect to the hostduring the jobs he will be doing.
