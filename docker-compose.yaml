@@ -6,7 +6,7 @@ services:
             RECOMMENDATIONS_HOST: recommendations
         # DOCKER_BUILDKIT=1 docker build . -f marketplace/Dockerfile \
         #                   -t marketplace --secret id=ca.key,src=ca.key
-        image: arun33/marketplace-ssl-app:775bed2
+        image: arun33/marketplace-app-ssl:3cd36ee
         networks:
             - microservices
         ports:

@@ -131,4 +131,29 @@ the picture below shows that the ingress is created and we can see the enpoint
 
 this allow us to access the jenkins server web interface.
 
+Notice how traefik behind the scene is load-balancing the incoming trafic in the cluster , we can litteraly redirect any trafic using our traefik ingress-controller and also secure our endpoints services whenever is needed. 
+
 With all this set up we can configure our jenkins pipeline.
+
+
+## Jenkins Pipeline Setup
+
+We need to get the password for login into the jenkins server web interface
+
+we can get it using this method for simplicity 
+```
+kubectl logs <jenkins pod>
+```
+![Alt text](/screenshots/passloginjenkins.png?raw=true "pass login jenkins")
+
+The setup is pretty straight forward  .
+
+- 1: we will configure the necessary credentials
+
+- 2: we will download the necessary plugins
+
+- 3: configure the workers 
+
+- 4: create the pipeline
+
+I will just screenshot each steps for the sake of brievity and i will explain the details of each steps during the presentation if needed
