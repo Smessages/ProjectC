@@ -167,7 +167,89 @@ we will expose our deployment as service in the cluster and same as the we expos
 
 The steps are pretty simple
 
-- we create the deployment with the images we just built
-- we expose the deployment
+- we create the deployments with the images we just built
+- we expose the deployments
 - we create an ingress 
-- we access our application in the web browser
+- we access our applications in the web browser
+
+to give a little bit of context about the applications that we built.
+
+Marketplace as you could guess from the name is marketplace app(microservice) that will be communicating wwith another microservice which in our project is called Recommendattions(microservice) .
+
+the Recommendation microservice is making recommendations on products, a user browsing on the marketplace, would like to buy. 
+
+the recommendations app is using a grpc protocol to interact with the marketplace microservice.
+
+GRPC is another way to make microservices communicate to each other it is more robust and offer some great advantages uppon rest api request. 
+checkout the Recommendations ans the marketplace code in those directories to see how the code where generated using a single one line commande both on the server and client side.
+
+i will leave the link to the documentation about the grpc protocol that help me prepare this project.
+
+lets create our ing for the marketplace service because the recommendation service don't need to be accessible by the user of , and for brievity of the presentation we just implement a bookstore in the marketplace app and a recommendation microservice that will be sending some recommendations base on the user connected to the marketplace.
+The main purpose here in the application section is to show how this two microservices can communicate together using the gRPC proto.
+
+- DEMO
+
+The last thing i want to show in this project is to use cert-manager to add tls certificates to our ingresses
+
+For that we ar going to use helm charts again for convinience to install cert-manager on our cluster
+
+here is the commande to issue:
+
+```
+helm upgrade --install cert-manager cert-manager/cert-manager --version 1.13.2 \
+  --create-namespace --namespace cert-manager \
+  --set installCRDs=true
+
+```
+So same as with traefik charts we install early inthis project , this command will create a repo named cert-manager , update the chart if it already exist if not it will install it , then we want a namespace also to be created where we will install all the resources created by this command, we also set the installCRDs to true in case we want to use a spcific ISSUER forn our certificates.
+
+Some few steps are to be done before we can start taking advantage of cert-manager in ou cluster. 
+
+first thing we need an ISSUER which could be cluster wide or namespaced
+
+we will be using letsencrypt for our project
+
+the code below shows the ISSUER definition  which a kind ClusterIssuer and we want a production grade certificate from letsencrypt.
+
+```
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-production
+spec:
+  acme:
+    # You must replace this email address with your own.
+    # Let's Encrypt will use this to contact you about expiring
+    # certificates, and issues related to your account.
+    email: alindou@thenuumfactory.fr
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      # Secret resource that will be used to store the account's private key.
+      name: issuer-letsencrypt-production
+    # Add a single challenge solver, HTTP01 using traefik
+    solvers:
+    - http01:
+        ingress:
+          ingressClassName: traefik
+
+
+
+```
+second resource we need i the certificate for the endpoint we want to secure with tls cert.
+
+```
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: marketplace.digbot.fun
+spec:
+  secretName: marketplace.digbot.fun
+  dnsNames:
+  - marketplace.digbot.fun
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+
+```
+this code request a certificate from letsencrypt for our marketplace endpoint  and if the verification went sucessfully we will be able to access our endpoint in a secure session with https://marketplace.digbot.fun

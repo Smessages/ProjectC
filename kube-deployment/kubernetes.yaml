@@ -17,7 +17,7 @@ spec:
         spec:
             containers:
                 - name: marketplace
-                  image: arun33/marketplace1:latest
+                  image: hidan/python-microservices-article-marketplace:0.1
                   env:
                       - name: RECOMMENDATIONS_HOST
                         value: recommendations
@@ -29,7 +29,7 @@ metadata:
     labels:
         app: recommendations
 spec:
-    replicas: 2
+    replicas: 1
     selector:
         matchLabels:
             app: recommendations
@@ -40,7 +40,7 @@ spec:
         spec:
             containers:
                 - name: recommendations
-                  image: arun33/recommendations:latest
+                  image: hidan/python-microservices-article-recommendations:0.1
 ---
 apiVersion: v1
 kind: Service
