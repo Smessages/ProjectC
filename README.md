@@ -120,8 +120,11 @@ here is the description of the jenkins service we created earlier.
 ![Alt text](/screenshots/description-jenkins-service.png?raw=true "jenkins service description")
 
 the command to create an ingress for this service will be 
-```kubectl create ing jenkins --rule=jenkins-service.digbot.fun/*=jenkins-service:8080
-|```
+```
+kubectl create ing jenkins --rule=jenkins-service.digbot.fun/*=jenkins-service:8080
+
+```
+
 the picture below shows that the ingress is created and we can see the enpoint
 
 ![Alt text](/screenshots/describe-ingress.png?raw=true "ingress description")
