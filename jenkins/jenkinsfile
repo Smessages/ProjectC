@@ -1,0 +1,112 @@
+pipeline {
+  parameters {
+        gitParameter name: 'BRANCH_TAG',
+                     type: 'PT_BRANCH_TAG',
+                     defaultValue: 'master'
+  }
+  agent {
+    kubernetes {
+      yaml '''
+        apiVersion: v1
+        kind: Pod
+        spec:
+          containers:
+          - name: builder
+            image: arun33/docker-git:1.0
+            command:
+            - cat
+            tty: true
+            volumeMounts:
+            - mountPath: /var/run/docker.sock
+              name: docker-sock
+          - name: docker
+            image: arun33/docker-git:1.0
+            command:
+            - cat
+            tty: true
+            volumeMounts:
+            - mountPath: /var/run/docker.sock
+              name: docker-sock
+          volumes:
+          - name: docker-sock
+            hostPath: 
+              path: /var/run/docker.sock
+        '''
+    }
+  }
+  stages {
+    stage('Example') {
+      steps {
+        checkout([$class: 'GitSCM',
+                  branches: [[name: "${params.BRANCH_TAG}"]],
+                  doGenerateSubmoduleConfigurations: false,
+                  extensions: [],
+                  gitTool: 'Default',
+                  submoduleCfg: [],
+                  userRemoteConfigs: [[url: 'https://github.com/Smessages/ProjectC.git']]
+                ])
+      }
+    }
+    stage('clone git repo') {
+      steps {
+        container('builder') {  
+          sh """
+            git clone https://github.com/Smessages/ProjectC.git
+          """
+        }
+      }
+    }
+    stage('parallel build') {
+      parallel {
+        stage('build marketplace app') {
+          steps {
+            container('builder') {
+              sh """
+                cd ProjectC
+                DOCKER_BUILDKIT=1 docker build . -f marketplace/Dockerfile \
+                                                 -t arun33/marketplace-app-ssl:\$(git rev-parse --short=7 HEAD) \
+                                                 --secret id=ca.key,src=ca.key
+                git config --global --add safe.directory /home/jenkins/agent/workspace/final-pipe
+                docker login -u arun33 -p dckr_pat_bAaWdOnHOWD9HrjQyNXiKPhYrnc
+                docker push arun33/marketplace-app-ssl:\$(git rev-parse --short=7 HEAD)
+                docker system prune --all --force
+              """ 
+            }
+          }
+        }
+        stage('build recommendations app') {
+          steps {
+            container('docker') { 
+              sh """
+                cd ProjectC
+                DOCKER_BUILDKIT=1 docker build . -f recommendations/Dockerfile \
+                                                 -t arun33/recommendations-app-ssl:\$(git rev-parse --short=7 HEAD) \
+                                                 --secret id=ca.key,src=ca.key
+                git config --global --add safe.directory /home/jenkins/agent/workspace/final-pipe
+                docker login -u arun33 -p dckr_pat_bAaWdOnHOWD9HrjQyNXiKPhYrnc
+                docker push arun33/recommendations-app-ssl:\$(git rev-parse --short=7 HEAD)
+                docker system prune --all --force
+              """ 
+            }
+          }
+        }
+      }
+    }
+    stage('deploy and itegration test') {
+      steps {
+        container('docker') {
+          sh 'docker-compose up -d'
+          sh 'docker-compose exec marketplace pytest marketplace_integration_test.py'
+        }
+      }
+    }
+    stage('clean up all the workspace') {
+      steps {
+        container('docker') {
+          sh 'docker-compose down'    
+          sh 'docker-compose kill'
+        }  
+      } 
+    }
+  }
+}
