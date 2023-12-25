@@ -253,3 +253,8 @@ spec:
 
 ```
 this code request a certificate from letsencrypt for our marketplace endpoint  and if the verification went sucessfully we will be able to access our endpoint in a secure session with https://marketplace.digbot.fun
+
+
+after the creation of the certificate , lets modify the ingress to take into account the new certificate generated with cert-manager.
+
+for that we have two things to modify or to set in the existing ingress
