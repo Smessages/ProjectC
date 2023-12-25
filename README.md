@@ -180,7 +180,7 @@ The steps are pretty simple
 - we create an ingress 
 - we access our applications in the web browser
 
-![Alt text](/screenshots/deploying-service-onkubernetes.png?raw=true "pass login jenkins")
+![Alt text](/screenshots/deploying-service-on-kubernetes.png?raw=true "pass login jenkins")
 
 
 little refresh just to give a little bit of context about the application we are building,
