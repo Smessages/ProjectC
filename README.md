@@ -297,4 +297,4 @@ this command tell cert-manager to obtain the missing certificate for the domain(
 
 and based on that traefik will notice the new certificate and update the ingress with it.
 
-![Alt text](/screenshots/endpoint-marketplace-secure-TLS.png?raw=true "pass login jenkins")
+![Alt text](/screenshots/endpoint-marketplace-secured-TLS.png?raw=true "pass login jenkins")
