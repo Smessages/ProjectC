@@ -160,7 +160,15 @@ The setup is pretty straight forward  .
 
 I will just screenshot each steps for the sake of brievity and i will explain the details of each steps during the presentation if needed
 
-the pipeline screenshot already shows that our images were built correctly, and we actualy have our images on the docker repository we can mentioned those images in a kuberntes deployment as we did for other deployment and that's how we will deploy our application on cloud.
+![Alt text](/screenshots/new-cloud-kubernetes.png?raw=true "kube worker")
+
+![Alt text](/screenshots/final-configuration.png?raw=true "jenkins final setup")
+
+the pipeline screenshot already shows that our images were built correctly, and we actualy have our images on the docker repository we can call those images in a kuberntes deployment.
+
+![Alt text](/screenshots/final-build-with-integrations-test-ok.png?raw=true "final build")
+
+![Alt text](/screenshots/ok-integration-test-with-deploy.png?raw=true "deploy with compose and itegration test")
 
 we will expose our deployment as service in the cluster and same as the we expose the jenkins deployment we will also create an ingress to make our application available out of the cluster with the help of traefik ingress controller.
 
@@ -171,6 +179,9 @@ The steps are pretty simple
 - we expose the deployment 
 - we create an ingress 
 - we access our applications in the web browser
+
+![Alt text](/screenshots/deploying-service-onkubernetes.png?raw=true "pass login jenkins")
+
 
 little refresh just to give a little bit of context about the application we are building,
 
