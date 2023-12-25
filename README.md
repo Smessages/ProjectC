@@ -183,18 +183,31 @@ The steps are pretty simple
 ![Alt text](/screenshots/deploying-service-on-kubernetes.png?raw=true "pass login jenkins")
 
 
-little refresh just to give a little bit of context about the application we are building,
+little refresh just to give a little bit of context about the application we are about to deploy,
 
-Marketplace as you could guess from the name is marketplace app(microservice) that will be communicating wwith another microservice which in our project is called Recommendattions(microservice) .
+Marketplace as you could guess from the name is marketplace app(microservice) that will be communicating with another microservice Recommendattions(microservice) .
 
-the Recommendation microservice is making recommendations on products, a user browsing on the marketplace, would like to buy. 
+the Recommendations microservice is making recommendations on products, a user browsing on the marketplace, would like to buy. 
 
 the recommendations app is using a grpc protocol to interact with the marketplace microservice.
 
-GRPC is another way to make microservices talk to each other it is more robust and offer some great advantages uppon rest api request. 
+GRPC is another way to make microservices talk to each other it is more robust and offer some great advantages upon rest api request. 
 checkout the Recommendations and the marketplace code in those directories to see how the code where generated using a single one line commande both on the server and client side.
 
-i will leave the link to the documentation about the grpc protocol that help me prepare this project.
+The protocol buffer file declares your API. Protocol buffers were developed at Google and provide a way to formally specify an API
+When you write your API in the protocol buffer language, you can generate Python code from it.
+
+```
+$ cd recommendations
+$ python -m grpc_tools.protoc -I ../protobufs --python_out=. \
+         --grpc_python_out=. ../protobufs/recommendations.proto
+
+```
+this command will generate the python code for the recommendations microservice base what we define in the recommendations.proto file.
+
+https://grpc.io/docs/what-is-grpc/introduction
+
+this link will hellp you understand what is all about. 
 
 lets create our ingress for the marketplace service because the recommendation service don't need to be accessible by the user , and for brievity of the presentation we just implement a bookstore in the marketplace app and a recommendation microservice that will be sending some recommendations base on the user connected to the marketplace.
 The main purpose here in the application section is to show how this two microservices can communicate together using the gRPC proto.
@@ -265,11 +278,11 @@ spec:
 ```
 this code request a certificate from letsencrypt for our marketplace endpoint  and if the verification went sucessfully we will be able to access our endpoint in a secure session with https://marketplace.digbot.fun
 
-
+![Alt text](/screenshots/secrets.png?raw=true "certificate created")
 after the creation of the certificate , lets modify the ingress to take into account the new certificate generated with cert-manager.
 
 for that we just have to edit the ingress resource and add a tls section in it. like as shown in the screenshot, otherwise we could delete the existing one and create a new ingress for the marketplace service
-
+![Alt text](/screenshots/editing-ing-to-include-TLS-section.png?raw=true "pass login jenkins")
 basically to provide a certificate to an ingress inside our cluster we have to do two things if the ingress already exist.
 - 1: edit the existing ingress to add the tls section in his definition
 Note: at this point if you try to connect to the marketplace app you will have and error with the default traefik certificate cuz the secretName mentioned in the ingress definition does not exist yet , so by default traefik will fill it with his own certificate and since your browser does'nt recognize the traefik certificate.
@@ -283,3 +296,5 @@ kubectl annotate ing marketplace cert-manager.io/cluster-issuer=letsencrypt-prod
 this command tell cert-manager to obtain the missing certificate for the domain(host parameter in the tls section) we define ingress 
 
 and based on that traefik will notice the new certificate and update the ingress with it.
+
+![Alt text](/screenshots/endpoint-marketplace-secure-TLS.png?raw=true "pass login jenkins")
