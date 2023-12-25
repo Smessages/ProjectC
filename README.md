@@ -168,11 +168,11 @@ we will expose our deployment as service in the cluster and same as the we expos
 The steps are pretty simple
 
 - we create the deployments with the images we just built
-- we expose the deployments
+- we expose the deployment 
 - we create an ingress 
 - we access our applications in the web browser
 
-to give a little bit of context about the applications that we built.
+little refresh just to give a little bit of context about the application we are building,
 
 Marketplace as you could guess from the name is marketplace app(microservice) that will be communicating wwith another microservice which in our project is called Recommendattions(microservice) .
 
@@ -180,12 +180,12 @@ the Recommendation microservice is making recommendations on products, a user br
 
 the recommendations app is using a grpc protocol to interact with the marketplace microservice.
 
-GRPC is another way to make microservices communicate to each other it is more robust and offer some great advantages uppon rest api request. 
-checkout the Recommendations ans the marketplace code in those directories to see how the code where generated using a single one line commande both on the server and client side.
+GRPC is another way to make microservices talk to each other it is more robust and offer some great advantages uppon rest api request. 
+checkout the Recommendations and the marketplace code in those directories to see how the code where generated using a single one line commande both on the server and client side.
 
 i will leave the link to the documentation about the grpc protocol that help me prepare this project.
 
-lets create our ing for the marketplace service because the recommendation service don't need to be accessible by the user of , and for brievity of the presentation we just implement a bookstore in the marketplace app and a recommendation microservice that will be sending some recommendations base on the user connected to the marketplace.
+lets create our ingress for the marketplace service because the recommendation service don't need to be accessible by the user , and for brievity of the presentation we just implement a bookstore in the marketplace app and a recommendation microservice that will be sending some recommendations base on the user connected to the marketplace.
 The main purpose here in the application section is to show how this two microservices can communicate together using the gRPC proto.
 
 - DEMO
@@ -257,4 +257,18 @@ this code request a certificate from letsencrypt for our marketplace endpoint  a
 
 after the creation of the certificate , lets modify the ingress to take into account the new certificate generated with cert-manager.
 
-for that we have two things to modify or to set in the existing ingress
+for that we just have to edit the ingress resource and add a tls section in it. like as shown in the screenshot, otherwise we could delete the existing one and create a new ingress for the marketplace service
+
+basically to provide a certificate to an ingress inside our cluster we have to do two things if the ingress already exist.
+- 1: edit the existing ingress to add the tls section in his definition
+Note: at this point if you try to connect to the marketplace app you will have and error with the default traefik certificate cuz the secretName mentioned in the ingress definition does not exist yet , so by default traefik will fill it with his own certificate and since your browser does'nt recognize the traefik certificate.
+
+- 2: annotate the ingress with cert-manager.io/cluster-issuer=<YOUR_CLUSTER_ISSUER>
+the command for our project will look like this 
+```
+kubectl annotate ing marketplace cert-manager.io/cluster-issuer=letsencrypt-production
+
+```
+this command tell cert-manager to obtain the missing certificate for the domain(host parameter in the tls section) we define ingress 
+
+and based on that traefik will notice the new certificate and update the ingress with it.
