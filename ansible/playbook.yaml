@@ -1,0 +1,60 @@
+---
+- hosts: nodes
+  become: yes
+  vars:
+  - password: '$6$rounds=656000$nMGw7wWoLPoo4FE5$IFGix54AX45JwPi9LXoYB1JADSp63ZUfpXl.n5W9EVDDQsRBBHOgbbVTe.IOfxt92hyldxDzHPDXrDBIjTo5s1' 
+  tasks:
+    - name: update cache
+      yum:
+        update_cache: yes   
+ # Install some package dependencies
+    - yum: name=gnupg state=present 
+    - yum: name=curl state=present
+    - name: install package
+      shell: |
+        yum install -y python3-pip virtualenv
+    - name: install docker on all the nodes of the cluster
+      yum:
+        update_cache: yes
+    - yum: name=docker state=present
+#    - shell: |
+#        - systemctl enable docker
+#    - shell: |
+#        - systemctl start docker
+#    - shell: |
+#       - usermod -aG docker ec2-user
+#   - shell: | 
+#       - newgrp docker
+    - ansible.builtin.service: name=docker enabled=yes
+    - ansible.builtin.service: name=docker state=started
+    - ansible.builtin.lineinfile:
+        path: /usr/lib/systemd/system/docker.service
+        regex: '^ExecStart=/usr/bin/dockerd '
+        insertafter: '^#ExecStart=/usr/bin/dockerd '
+        line: ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:4243 -H unix://var/run/docker.sock   
+    - name: reload systemd daemon
+      systemd:
+        daemon_reload: yes
+    - name: restart docker  service
+      systemd:
+        name: docker
+        state: restarted
+    - name: Ensure "docker" exists with correct gid
+      ansible.builtin.group:
+        name: docker
+        state: present
+        gid: 1950
+    - name: create a user jenkins with home dir and ssh-key
+      user:
+        name: jenkins
+        state: present
+        shell: /bin/bash
+        password: "{{ 'jenkins' | password_hash('sha512') }}"
+        generate_ssh_key: yes
+        ssh_key_bits: 2048
+        update_password: on_create
+        groups: root, docker
+        append: yes
+      register: jenkins
+    - shell: chage -d 0 jenkins
+      when: jenkins.changed
